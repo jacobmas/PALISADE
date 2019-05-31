@@ -2,7 +2,7 @@
 
 TAR := gnutar
 
-OMPINCLUDE := -I /opt/local/include/libomp -fopenmp
+OMPINCLUDE := -I /usr/local/include/libomp -fopenmp
 
 ifneq ($(wildcard third-party/include), )
   NTLLIB := third-party/lib/libntl.dylib
@@ -10,9 +10,9 @@ ifneq ($(wildcard third-party/include), )
 endif
 
 CPPSTD := -std=c++11 -stdlib=libc++ -fPIC
-CC := /opt/local/bin/clang++ $(CPPSTD)
-BISON := /opt/local/bin/bison
-FLEX := /opt/local/bin/flex
+CC := /usr/local/Cellar/llvm/8.0.0_1/bin/clang++ $(CPPSTD)
+BISON := /usr/local/bin/bison
+FLEX := /usr/local/bin/flex
 
 LIBSUFFIX := .dylib
 LIBCMD := $(CC) -dynamiclib -undefined suppress -flat_namespace -fopenmp -o #libname to follow
