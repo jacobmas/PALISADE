@@ -25,7 +25,7 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @section DESCRIPTION
- * Demo software for BFV multiparty operations.
+ * Challenge problem for Jacob Alperin-Sheriff
  *
  */
 
@@ -46,7 +46,7 @@ using namespace std;
 using namespace lbcrypto;
 
 /** 
- * Make playing with parameters easier by reading them line by line from a file, if desired
+ * Make playing with parameters easier by reading them line by line from a file, if desired (rather than recompiling each time)
  * 1st line: plaintext modulus
  * 2nd line: additive depth
  * 3rd line: multiplicative depth
@@ -83,8 +83,9 @@ int main(int argc, char *argv[]) {
 	std::cout << "\nThis code solves the challenge problem using the BFVrns scheme. " << std::endl;
 	std::cout << "Following the demo's code (demo-bfvrns.cpp), This code shows how to auto-generate parameters during "<<std::endl;
 	std::cout << "run-time based on desired plaintext moduli and security levels. " << std::endl;
-	std::cout << "In this demonstration we give a C++ prototype that uses the BFVrns scheme to efficiently evaluate " << std::endl;
-	std::cout << " an inner product of two encrypted vectors, each with 10,000 integers randomly generated in the range of [-5,5]." << std::endl;
+	std::cout << "In this demonstration we give a C++ prototype that uses the BFVrns scheme to efficiently " << std::endl;
+	std::cout << "evaluate an inner product of two encrypted vectors, " << std::endl;
+	std::cout << "each with 10,000 integers randomly generated in the range of [-5,5]." << std::endl;
 
 	std::cout << "Assumptions made on vague aspects of the challenge problem. " << std::endl;
 	std::cout << "\t(A) The random vectors need not be generated via (a properly seeded with true randomness) CSPRNG, as " <<std::endl;
@@ -108,12 +109,13 @@ int main(int argc, char *argv[]) {
 	double sigma = 4;
 	double rootHermiteFactor = 1.006;
 
-	// m for packing 
-	usint m=53;
-	int batchSize=10000;
-
+	// m is # of ``slots" we want available for packing 
+	usint m=16384;
+	// Efficiency should dictate we use all the slots 
+	int batchSize=16384;
+	// Size of random vector
 	int vec_size=10000;
-
+	// use system randomness for seed
 	std::random_device rd;
 
 	int seed=rd();
@@ -222,18 +224,8 @@ int main(int argc, char *argv[]) {
 	//Decryption of Ciphertext
 	////////////////////////////////////////////////////////////
 
-	Plaintext plaintext1Dec;
-	Plaintext plaintext2Dec;
-	Plaintext plaintext3Dec;
-	Plaintext plaintext4Dec;
-	Plaintext plaintext5Dec;
-	Plaintext plaintext6Dec;
-
-	start = currentDateTime();
-
-
-	cryptoContext->Decrypt(keyPair.secretKey, ciphertext1, &plaintext1Dec);
-	cryptoContext->Decrypt(keyPair.secretKey, ciphertext2, &plaintext2Dec);
+	Plaintext plaintextDec;
+	
 
 
 
@@ -245,19 +237,20 @@ int main(int argc, char *argv[]) {
 
 
 	start = currentDateTime();
-	//Perform consecutive multiplications and do a keyswtiching at the end.
+	// Compute inner product all in one go
+	// Note that this way of doing inner products isn't useful if we want to do further computation on the result of the inner product ...
 	ciphertextInner     = cryptoContext->EvalInnerProduct(ciphertext1,ciphertext2,batchSize);
-	cryptoContext->Decrypt(keyPair.secretKey, ciphertextInner, &plaintext3Dec);
+	cryptoContext->Decrypt(keyPair.secretKey, ciphertextInner, &plaintextDec);
 
 
 	finish = currentDateTime();
 	diff = finish - start;
 	cout << "EvalMult time: " << "\t" << diff << " ms" << endl;
 
-	cout << "\n Inner product computed: \n";
-	cout << plaintext3Dec->GetPackedValue()[0] << endl;
-	cout << "\n Inner product not homomorphically: \n";
-	cout << inner_prod << std::endl;
+	cout << "Inner product computed homomorphically: ";
+	cout << plaintextDec->GetPackedValue()[0] << std::endl;
+	cout << "Inner product directly from plaintexts: ";
+	cout << inner_prod << std::endl << "\n";
 
 
 
